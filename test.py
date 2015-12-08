@@ -34,7 +34,7 @@ def main():
     print("Sequence A:  %s" % seq1)
     print("Sequence B:  %s" % seq2)
 
-    kanji, kana = next(needleman_wunsch(seq1, seq2, fill="　"))
+    kanji, kana = next(needleman_wunsch(seq1, seq2, d=-1, fill="　"))
     print(kanji)
     print(kana)
     print()
@@ -42,14 +42,17 @@ def main():
     match = [(a.replace("　", ""), b.replace("　", "")) for a, b in match]
     for m in match:
         print(m)
+    print()
 
     for a,b in match:
         filtered = re.sub("[^\u4e00-\u9fff]", "", a)
         if len(filtered) > 0:
-            #print("%s = %s" % (a,b))
-            result = split_reading(a, b, True)
-            x,y = zip(*result)
-            print("%s = %s" % (a,', '.join(y)))
+            if a == filtered:
+                result = split_reading(a, b, True)
+                x,y = zip(*result)
+                print("%s = %s" % (a,', '.join(y)))
+            else:
+                print("%s = %s" % (a, b))
 
     print()
 
