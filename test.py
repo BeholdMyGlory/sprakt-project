@@ -1,26 +1,19 @@
-
 import functools
 import re
-import sqlite3
 
 from smith_waterman import *
 from needleman_wunsch import *
+from reading_splitter import *
 
 def get_ruby(alignA, alignB):
     return ''.join(alignB[i] if alignB[i]!=alignA[i] else "　" for i in range(len(alignB)))
 
-def process_reading(reading):
-    hiragana = "".join(chr(ord(c) - (ord('ァ') - ord('ぁ')))
-                      if "ァ" <= c <= "ヶ" else c
-                      for c in reading)
-    return hiragana.split(".")[0].strip("-")
-
-def get_readings(kanji):
-    c = conn.cursor()
-    readings =  {process_reading(reading)
-                 for reading, reading_type in c.execute(
-                     "SELECT reading, type from readings where kanji=?", (kanji,))}
-    return readings
+    #readings = {
+    #    "象": {"しょう", "ぞう"},
+    #    "牙": {"が", "げ", "きば", "は"},
+    #    "質": {"しつ", "しち", "ち", "たち", "もと"}
+    #}
+    #return readings[kanji]
 
 def split(v, el):
     a, b = el
@@ -51,9 +44,34 @@ def main():
     kanji, kana = next(needleman_wunsch(seq1, seq2, fill="　"))
     print(kanji)
     print(kana)
+    print()
     match = functools.reduce(split, zip(kanji, kana), [])
     match = [(a.replace("　", ""), b.replace("　", "")) for a, b in match]
-    print(match)
+    for m in match:
+        print(m)
+
+    for a,b in match:
+        filtered = re.sub("[^\u4e00-\u9fff]", "", a)
+        if len(filtered) > 0:
+            #print("%s = %s" % (a,b))
+            result = split_reading(a, b)
+            x,y = zip(*result)
+            print("%s = %s" % (a,' '.join(y)))
+
+    print()
+
+    kanji = "象牙質"
+    kana = "ぞうげしつ"
+
+    print(kanji)
+    print(kana)
+    print()
+
+    result = split_reading(kanji, kana)
+
+    print(result)
+    for a, b in result:
+        print("%s = %s" % (a,b))
 
     #print("Sequence 2: %s" % seq3)
     #filtered = re.sub("[\u4e00-\u9fff]", "　", alignA)
@@ -62,7 +80,5 @@ def main():
     #rubyCD = get_ruby(alignC, alignD)
 
 if __name__ == "__main__":
-    conn = sqlite3.connect("kanjidic.db")
     main()
-    conn.close()
 
