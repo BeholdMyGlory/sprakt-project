@@ -22,6 +22,8 @@ def split(v, el):
 def main():
     seq1 = "ACACACTA"
     seq2 = "AGCACACA"
+    seq1 = "GCATGCU"
+    seq2 = "GATTACA"
     #seq1 = "fjfjfJDfjdjdfjdfgsGDgssfsdrhse"
     #seq2 = "fjfjfjdfjdjdfjdfgsgdgssfsdrhse"
     seq1 = "このエナメル質と、象牙質、セメント質、歯髄で歯は構成される。通常目に見える部分がこのエナメル質であり、象牙質に支えられている。"
@@ -31,11 +33,11 @@ def main():
     print("Sequence A:  %s" % seq1)
     print("Sequence B:  %s" % seq2)
 
-    kanji, kana = needleman_wunsch(seq1, seq2, fill="-")
+    kanji, kana = next(needleman_wunsch(seq1, seq2, fill="　"))
     print(kanji)
     print(kana)
     match = functools.reduce(split, zip(kanji, kana), [])
-    match = [(a.replace("-", ""), b.replace("-", "")) for a, b in match]
+    match = [(a.replace("　", ""), b.replace("　", "")) for a, b in match]
     print(match)
 
     #print("Sequence 2: %s" % seq3)
