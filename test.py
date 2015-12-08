@@ -1,12 +1,20 @@
 
 import functools
 import re
+import sqlite3
 
 from smith_waterman import *
 from needleman_wunsch import *
 
 def get_ruby(alignA, alignB):
     return ''.join(alignB[i] if alignB[i]!=alignA[i] else "　" for i in range(len(alignB)))
+
+def get_readings(kanji):
+    c = conn.cursor()
+    readings =  {kanji
+                 for kanji, reading_type in c.execute(
+                     "SELECT reading, type from readings where kanji=?", (kanji,))}
+    return readings
 
 def split(v, el):
     a, b = el
@@ -47,4 +55,7 @@ def main():
     #rubyCD = get_ruby(alignC, alignD)
 
 if __name__ == "__main__":
+    conn = sqlite3.connect("kanjidic.db")
     main()
+    conn.close()
+
