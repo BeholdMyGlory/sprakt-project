@@ -8,13 +8,6 @@ from reading_splitter import *
 def get_ruby(alignA, alignB):
     return ''.join(alignB[i] if alignB[i]!=alignA[i] else "　" for i in range(len(alignB)))
 
-    #readings = {
-    #    "象": {"しょう", "ぞう"},
-    #    "牙": {"が", "げ", "きば", "は"},
-    #    "質": {"しつ", "しち", "ち", "たち", "もと"}
-    #}
-    #return readings[kanji]
-
 def split(v, el):
     a, b = el
     if len(v) == 0:
@@ -54,20 +47,20 @@ def main():
         filtered = re.sub("[^\u4e00-\u9fff]", "", a)
         if len(filtered) > 0:
             #print("%s = %s" % (a,b))
-            result = split_reading(a, b)
+            result = split_reading(a, b, True)
             x,y = zip(*result)
-            print("%s = %s" % (a,' '.join(y)))
+            print("%s = %s" % (a,', '.join(y)))
 
     print()
 
-    kanji = "象牙質"
-    kana = "ぞうげしつ"
+    kanji = "学校"
+    kana = "がっこう"
 
     print(kanji)
     print(kana)
     print()
 
-    result = split_reading(kanji, kana)
+    result = split_reading(kanji, kana, True)
 
     print(result)
     for a, b in result:
@@ -81,4 +74,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

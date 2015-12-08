@@ -17,7 +17,7 @@ def get_readings(kanji):
                      "SELECT reading, type from readings where kanji=?", (kanji,))}
     return readings
 
-def split_reading(kanji, kana):
+def split_reading(kanji, kana, skip=False):
     def generate_readings(kanji, cur, i):
             if i < len(kanji):
                 for reading in get_readings(kanji[i]):
@@ -38,6 +38,9 @@ def split_reading(kanji, kana):
 
     #print()
     r,s = zip(*scores)
-    result = r[s.index(min(s))]
+    minScore = min(s)
+    result = r[s.index(minScore)]
 
+    if minScore > 0 and skip:
+        return [(kanji, kana)]
     return result
