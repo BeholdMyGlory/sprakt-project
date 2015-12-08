@@ -9,10 +9,16 @@ from needleman_wunsch import *
 def get_ruby(alignA, alignB):
     return ''.join(alignB[i] if alignB[i]!=alignA[i] else "　" for i in range(len(alignB)))
 
+def process_reading(reading):
+    hiragana = "".join(chr(ord(c) - (ord('ァ') - ord('ぁ')))
+                      if "ァ" <= c <= "ヶ" else c
+                      for c in reading)
+    return hiragana.split(".")[0].strip("-")
+
 def get_readings(kanji):
     c = conn.cursor()
-    readings =  {kanji
-                 for kanji, reading_type in c.execute(
+    readings =  {process_reading(reading)
+                 for reading, reading_type in c.execute(
                      "SELECT reading, type from readings where kanji=?", (kanji,))}
     return readings
 
@@ -38,6 +44,7 @@ def main():
     #seq1 = "このエナメルと、、セメント、ではされる。にえるがこのエナメルであり、にえられている。"
     seq2 = "このエナメルしつと、ぞうげしつ、セメントしつ、しずいでははこうせいされる。つうじょうめにみえるぶぶんがこのエナメルしつであり、ぞうげしつにささえられている。"
 
+    print(get_readings("悪"))
     print("Sequence A:  %s" % seq1)
     print("Sequence B:  %s" % seq2)
 
