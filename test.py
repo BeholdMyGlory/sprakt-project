@@ -5,19 +5,10 @@ from smith_waterman import *
 from needleman_wunsch import *
 from reading_splitter import *
 
+import kanamatcher
+
 def get_ruby(alignA, alignB):
     return ''.join(alignB[i] if alignB[i]!=alignA[i] else "　" for i in range(len(alignB)))
-
-def split(v, el):
-    a, b = el
-    if len(v) == 0:
-        return [(a, b)]
-    elif (a == b and v[-1][0] == v[-1][1] or
-          a != b and v[-1][0] != v[-1][1]):
-        v[-1] = v[-1][0] + a, v[-1][1] + b
-    else:
-        v.append((a, b))
-    return v
 
 def main():
     seq1 = "ACACACTA"
@@ -30,16 +21,15 @@ def main():
     #seq1 = "このエナメルと、、セメント、ではされる。にえるがこのエナメルであり、にえられている。"
     seq2 = "このエナメルしつと、ぞうげしつ、セメントしつ、しずいでははこうせいされる。つうじょうめにみえるぶぶんがこのエナメルしつであり、ぞうげしつにささえられている。"
 
-    print(get_readings("悪"))
     print("Sequence A:  %s" % seq1)
     print("Sequence B:  %s" % seq2)
 
-    kanji, kana = next(needleman_wunsch(seq1, seq2, d=-1, fill="　"))
+    kanji, kana = next(kanamatcher.align(seq1, seq2, d=-1, fill="　"))
     print(kanji)
     print(kana)
     print()
-    match = functools.reduce(split, zip(kanji, kana), [])
-    match = [(a.replace("　", ""), b.replace("　", "")) for a, b in match]
+    match = kanamatcher.find_matches(kanji, kana)
+    match = kanamatcher.clear_fill(match, fill="　")
     for m in match:
         print(m)
     print()
@@ -74,6 +64,10 @@ def main():
     #kanji = re.sub("[^\u4e00-\u9fff ]", "　", alignA)
     #rubyAB = get_ruby(alignA, alignB)
     #rubyCD = get_ruby(alignC, alignD)
+    print(get_readings("匹"))
+
+    print(kanamatcher.match_kana("日本語は、主に日本国内や日本人同士で使われている言語である。",
+                                 "にほんごは、おもににほんこくないやににほんじんどうしでつかわれているげんごである。"))
 
 if __name__ == "__main__":
     main()
