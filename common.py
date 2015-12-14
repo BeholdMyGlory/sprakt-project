@@ -1,3 +1,4 @@
+
 def print_matrix(H):
     m = len(H)-1
     n = len(H[0])-1
@@ -8,6 +9,9 @@ def print_matrix(H):
         for i in range(m+1):
             row += " " + str(H[i][j]).rjust(l) + " "
         print(row)
+
+def is_kanji(k):
+    return 0x3400 <= ord(k) <= 0x9faf
 
 def find_alignment(dirs, a, b, fill="-"):
     return find_all(dirs, a, b, "", "", fill, len(a), len(b))
