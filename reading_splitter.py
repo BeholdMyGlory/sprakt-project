@@ -2,6 +2,8 @@ import sqlite3
 
 import Levenshtein
 
+from needleman_wunsch import needleman_wunsch as align
+
 conn = sqlite3.connect("kanjidic.db")
 
 def process_reading(reading):
@@ -41,6 +43,7 @@ def get_readings(kanji):
                  for reading, reading_type in c.execute(
                      "SELECT reading, type from readings where kanji=?", (kanji,))
                  for processed_reading in process_reading(reading)}
+    readings.add("?")
     return readings
 
 def split_reading(kanji, kana, skip=False):
@@ -62,12 +65,33 @@ def split_reading(kanji, kana, skip=False):
         #print("%s (score=%d)" % (read,score))
         scores.append((reading,score))
 
+    scores = sorted(scores, key=lambda s: s[1])
+
     #print()
     r,s = zip(*scores)
     minScore = min(s)
     result = r[s.index(minScore)]
 
-    if minScore > 0 and skip:
-        return [(kanji, kana)]
+    if minScore == 0:
+        return result
 
-    return result
+    if not skip:
+        for result in r:
+            q = kana
+            w = '　'.join([y for _,y in result])
+
+            def similarity(a,b):
+                if a==b:
+                    return 1
+                if a=='　' or b=='　':
+                    return -10
+                return -1
+
+            l, r = next(align(q, w, d=-1, fill="　", s=similarity))
+
+            res = filter(None, l.split('　'))
+            res = list(zip([x for x,_ in result], res))
+            if len(res) == len(result):
+                return res
+
+    return [(kanji, kana)]
