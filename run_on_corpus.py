@@ -24,11 +24,15 @@ def main(*argv):
     try:
         with open(kanji_file, encoding="utf-8-sig") as kjf, \
             open(kana_file, encoding="utf-8-sig") as knf:
+
+            skip_lines = 0
             for kanji, kana in zip(kjf, knf):
                 if kanji.strip() == '':
                     continue
 
                 lines += 1
+
+                print("{}.".format(lines))
 
                 kanji, kana = strip_whitespace.sub("", kanji), strip_whitespace.sub("", kana)
 
@@ -70,10 +74,16 @@ def main(*argv):
                 print(ruby)
                 print(output)
 
-                if not print_all:
-                    input()
-                else:
+                if print_all or skip_lines > 0:
+                    if skip_lines > 0:
+                        skip_lines -= 1
                     print()
+                else:
+                    l = input("Press enter or input the number of lines to skip: ")
+                    try:
+                        skip_lines = max(0, int(l))
+                    except ValueError:
+                        pass
 
     except KeyboardInterrupt:
         pass

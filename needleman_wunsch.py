@@ -3,7 +3,7 @@ import re
 from common import *
 
 def similarity(a, b):
-    if a == b:
+    if to_hiragana(a) == to_hiragana(b):
         return +1
     else:
         return -1

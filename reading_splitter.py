@@ -3,13 +3,12 @@ import sqlite3
 import Levenshtein
 
 from needleman_wunsch import needleman_wunsch as align
+import common
 
 conn = sqlite3.connect("kanjidic.db")
 
 def process_reading(reading):
-    hiragana = "".join(chr(ord(c) - (ord('ァ') - ord('ぁ')))
-                       if "ァ" <= c <= "ヶ" else c
-                       for c in reading)
+    hiragana = common.to_hiragana(reading)
     hiragana = hiragana.split(".")[0].strip("-")
     generated_readings = {hiragana}
 

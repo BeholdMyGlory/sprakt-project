@@ -13,6 +13,16 @@ def print_matrix(H):
 def is_kanji(k):
     return 0x3400 <= ord(k) <= 0x9faf
 
+def to_katakana(kana):
+    return "".join(chr(ord(c) + (ord('ァ') - ord('ぁ')))
+                   if "ぁ" <= c <= "ゖ" else c
+                   for c in kana)
+
+def to_hiragana(kana):
+    return "".join(chr(ord(c) - (ord('ァ') - ord('ぁ')))
+                   if "ァ" <= c <= "ヶ" else c
+                   for c in kana)
+
 def find_alignment(dirs, a, b, fill="-"):
     return find_all(dirs, a, b, "", "", fill, len(a), len(b))
 
