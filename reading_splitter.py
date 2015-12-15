@@ -72,14 +72,14 @@ def split_reading(kanji, kana, max_distance=1, return_score=False):
     result = r[s.index(minScore)]
 
     if minScore == 0:
-        return result, minScore if return_score else result
+        return (result, minScore) if return_score else result
 
     res = approximate_split(scores, kana, max_distance)
     if res:
-        return res, minScore if return_score else res
+        return (res, minScore) if return_score else res
 
     res = [(kanji, kana)]
-    return res, minScore if return_score else res
+    return (res, minScore) if return_score else res
 
 def approximate_split(readings, kana, max_distance):
     def similarity(a,b):
