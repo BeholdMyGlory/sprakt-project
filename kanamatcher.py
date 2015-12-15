@@ -1,5 +1,6 @@
 
 import functools
+import itertools
 
 import common
 from needleman_wunsch import needleman_wunsch as align
@@ -19,6 +20,18 @@ def find_matches(a, b):
 
     return functools.reduce(split, zip(a, b), [])
 
+def filter_alignments(alignments, fill="-", limit=100):
+    matches = set()
+    for a, b in itertools.islice(alignments, limit):
+        match = clear_fill(find_matches(a, b), fill=fill)
+        tup = tuple(match)
+        if tup in matches:
+            continue
+
+        yield match
+
+        matches.add(tup)
+
 def clear_fill(l, fill='-'):
     return [(a.replace(fill, ''), b.replace(fill, '')) for a, b in l]
 
@@ -27,7 +40,9 @@ def finalize_furigana(l):
             for kanji, kana in l
             for a, b in (split_reading(kanji, kana, skip=True)
                          # TODO: better check for when to call split_reading
-                         if common.to_hiragana(kanji) != kana
+                         if (common.to_hiragana(kanji) != kana
+                             and len(kanji) != 0
+                             and all(common.is_kanji(k) for k in kanji))
                          else [(kanji, None)])]
 
 def match_kana(kanji, kana):
