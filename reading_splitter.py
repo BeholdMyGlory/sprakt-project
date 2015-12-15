@@ -45,7 +45,7 @@ def get_readings(kanji):
     readings.add("?")
     return readings
 
-def split_reading(kanji, kana, skip=False):
+def split_reading(kanji, kana, max_distance=1, return_score=False):
     def generate_readings(kanji, cur, i):
             if i < len(kanji):
                 for reading in get_readings(kanji[i]):
@@ -72,16 +72,16 @@ def split_reading(kanji, kana, skip=False):
     result = r[s.index(minScore)]
 
     if minScore == 0:
-        return result
+        return result, minScore if return_score else result
 
-    if not skip:
-        res = approximate_split(r, kana)
-        if res:
-            return res
+    res = approximate_split(scores, kana, max_distance)
+    if res:
+        return res, minScore if return_score else res
 
-    return [(kanji, kana)]
+    res = [(kanji, kana)]
+    return res, minScore if return_score else res
 
-def approximate_split(readings, kana):
+def approximate_split(readings, kana, max_distance):
     def similarity(a,b):
         if a==b:
             return 1
@@ -89,7 +89,10 @@ def approximate_split(readings, kana):
             return -10
         return -1
 
-    for result in readings:
+    for result, score in readings:
+        if score > max_distance:
+            break
+
         q = kana
         w = '　'.join([y for _,y in result])
 

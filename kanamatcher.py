@@ -20,7 +20,7 @@ def find_matches(a, b):
 
     return functools.reduce(split, zip(a, b), [])
 
-def filter_alignments(alignments, fill="-", limit=100):
+def filter_alignments(alignments, fill="-", limit=1000):
     matches = set()
     for a, b in itertools.islice(alignments, limit):
         match = clear_fill(find_matches(a, b), fill=fill)
@@ -35,21 +35,29 @@ def filter_alignments(alignments, fill="-", limit=100):
 def clear_fill(l, fill='-'):
     return [(a.replace(fill, ''), b.replace(fill, '')) for a, b in l]
 
-def finalize_furigana(l):
-    return [(a, b)
-            for kanji, kana in l
-            for a, b in (split_reading(kanji, kana, skip=True)
-                         # TODO: better check for when to call split_reading
-                         if (common.to_hiragana(kanji) != kana
-                             and len(kanji) != 0
-                             and all(common.is_kanji(k) for k in kanji))
-                         else [(kanji, None)])]
+def finalize_furigana(l, return_score=False):
+    total_score = 0
+
+    def process_furigana(kanji, kana):
+        nonlocal total_score
+        if (common.to_hiragana(kanji) != kana
+                and len(kanji) != 0
+                and all(common.is_kanji(k) for k in kanji)):
+            furigana, score = split_reading(kanji, kana, return_score=True)
+            total_score += score
+            return furigana
+        else:
+            return [(kanji, None)]
+
+    furigana = [(a, b)
+                for kanji, kana in l
+                for a, b in process_furigana(kanji, kana)]
+    return furigana, total_score if return_score else furigana
 
 def match_kana(kanji, kana):
-    return finalize_furigana(
-        clear_fill(
-            find_matches(
-                *next(align(kanji, kana)))))
+    return min((finalize_furigana(alignment, return_score=True)
+                for alignment in filter_alignments(align(kanji, kana))),
+               key=lambda x: x[1])[0]
 
 if __name__ == "__main__":
     kanji = "出来ない場合も多いと思います"
