@@ -1,6 +1,7 @@
 
 import functools
 
+import common
 from needleman_wunsch import needleman_wunsch as align
 from reading_splitter import get_readings, process_reading, split_reading
 
@@ -26,8 +27,8 @@ def finalize_furigana(l):
             for kanji, kana in l
             for a, b in (split_reading(kanji, kana, skip=True)
                          # TODO: better check for when to call split_reading
-                         if kanji != kana
-                         else [(kana, None)])]
+                         if common.to_hiragana(kanji) != kana
+                         else [(kanji, None)])]
 
 def match_kana(kanji, kana):
     return finalize_furigana(
