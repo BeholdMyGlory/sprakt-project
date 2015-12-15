@@ -42,7 +42,7 @@ def finalize_furigana(l, return_score=False):
         nonlocal total_score
         if (common.to_hiragana(kanji) != kana
                 and len(kanji) != 0
-                and all(common.is_kanji(k) for k in kanji)):
+                and all(common.is_kanji(k) or k == '々' for k in kanji)):
             furigana, score = split_reading(kanji, kana, return_score=True)
             total_score += score
             return furigana
