@@ -48,7 +48,11 @@ def get_readings(kanji):
 def split_reading(kanji, kana, max_distance=1, return_score=False):
     def generate_readings(kanji, cur, i):
             if i < len(kanji):
-                for reading in get_readings(kanji[i]):
+                if kanji[i] == "々":
+                    readings = get_readings(kanji[i-1])
+                else:
+                    readings = get_readings(kanji[i])
+                for reading in readings:
                     yield from generate_readings(kanji, cur+[(kanji[i],reading)], i+1)
             else:
                 yield cur
