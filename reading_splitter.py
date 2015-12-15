@@ -75,22 +75,27 @@ def split_reading(kanji, kana, skip=False):
         return result
 
     if not skip:
-        for result in r:
-            q = kana
-            w = '　'.join([y for _,y in result])
-
-            def similarity(a,b):
-                if a==b:
-                    return 1
-                if a=='　' or b=='　':
-                    return -10
-                return -1
-
-            l, r = next(align(q, w, d=-1, fill="　", s=similarity))
-
-            res = filter(None, l.split('　'))
-            res = list(zip([x for x,_ in result], res))
-            if len(res) == len(result):
-                return res
+        res = approximate_split(r, kana)
+        if res:
+            return res
 
     return [(kanji, kana)]
+
+def approximate_split(readings, kana):
+    def similarity(a,b):
+        if a==b:
+            return 1
+        if a=='　' or b=='　':
+            return -10
+        return -1
+
+    for result in readings:
+        q = kana
+        w = '　'.join([y for _,y in result])
+
+        l, r = next(align(q, w, d=-1, fill="　", s=similarity))
+
+        res = filter(None, l.split('　'))
+        res = list(zip([x for x,_ in result], res))
+        if len(res) == len(result):
+            return res
