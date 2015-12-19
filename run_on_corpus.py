@@ -22,6 +22,7 @@ def main(*argv):
                         help="Penalty for a mismatch between the given kana and the generated ruby")
     parser.add_argument('--alignments-to-test', type=int,
                         default=kanamatcher.MAX_NUM_ALIGNMENTS, help="Max number of alignments to test")
+    parser.add_argument('--save-output', default=None, help="Save statistics and scores to file")
     args = parser.parse_args()
 
     kanamatcher.NO_RUBY_PENALTY = args.missing_ruby_penalty
@@ -94,19 +95,29 @@ def main(*argv):
         pass
 
     bad_lines.sort(reverse=True)
-    print("================")
-    print("Errors during parsing: {}/{}".format(errors, lines))
-    print("Total score: {}".format(total_score))
-    print("Average score: {}".format(total_score / lines))
-
-    print("================")
-    input("Press enter to view bad lines: ")
+    std_output = ("================\n" +
+                  "Errors during parsing: {}/{}\n".format(errors, lines) +
+                  "Total score: {}\n".format(total_score) +
+                  "Average score: {}\n".format(total_score / lines) +
+                  "================\n")
 
     pager_output = ""
     for score, line, kanji, kana, output in bad_lines:
         pager_output += "{}.\n{}\n{}\n{}\nScore: {}\n\n".format(
             line, kanji, kana, output, score)
+
+    if args.save_output is not None:
+        try:
+            with open(args.save_output, 'w') as f:
+                f.write(std_output)
+                f.write(pager_output)
+        except:
+            traceback.print_exc()
+
+    print(std_output)
+    input("Press enter to view bad lines: ")
     pydoc.pager(pager_output)
+
 
 if __name__ == '__main__':
     main(*sys.argv[1:])
