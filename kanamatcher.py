@@ -2,11 +2,16 @@
 import functools
 import itertools
 
+import Levenshtein
+
 import common
 from needleman_wunsch import needleman_wunsch as align
 from reading_splitter import get_readings, process_reading, split_reading
 
+# kanji missing ruby
 NO_RUBY_PENALTY = 2
+# mismatch between given kana and resulting ruby
+KANA_MISMATCH_PENALTY = 2
 
 def find_matches(a, b):
     def split(v, el):
@@ -52,7 +57,11 @@ def finalize_furigana(l, return_score=False):
     furigana = [pair
                 for nested in nested_furigana
                 for pair in nested]
-    total_score = sum(scores)
+    total_score = sum(scores) + KANA_MISMATCH_PENALTY * \
+        Levenshtein.distance("".join(kana for _, kana in l),
+                             "".join(kana if kana is not None else kanji
+                                     for kanji, kana in furigana))
+
     return (furigana, total_score) if return_score else furigana
 
 def match_kana(kanji, kana, return_score=False):
@@ -62,25 +71,33 @@ def match_kana(kanji, kana, return_score=False):
             yield furigana, score
 
             if score == 0:
-                print("Stopped after", i)
                 break
 
     best_match, score = min(stoponzero(filter_alignments(align(kanji, kana))),
                             key=lambda x: x[1])
     return (best_match, score) if return_score else best_match
 
+def pretty_print(pairs, fill="　"):
+    ruby = ""
+    output = ""
 
+    for kanji, kana in pairs:
+        if kana is not None:
+            ruby += kana
+        output += kanji
+
+        while len(ruby) < len(output):
+            ruby += "　"
+        while len(output) < len(ruby):
+            output += "　"
+
+        ruby += "|"
+        output += "|"
+
+    return ruby, output
 
 if __name__ == "__main__":
     kanji = "強い相手を求めて空を飛び回る。なんでも溶かしてしまう高熱の炎を自分より弱いものに向けることはしない。"
     kana = "つよいあいてをもとめてそらをとびまわる。なんでもとかしてしまうこうねつのほのおをじぶんよりよわいものにむけることはしない。"
-    kanji, kana = next(align(kanji, kana))
-    print(kanji)
-    print(kana)
-    match = find_matches(kanji, kana)
-    print(match)
-    match = clear_fill(match)
-    print(match)
-    print(finalize_furigana(match))
 
-    #print(match_kana("出来ない場合も多いと思います", "できないばあいもおおいとおもいます"))
+    print("\n".join(pretty_print(match_kana(kanji, kana))))

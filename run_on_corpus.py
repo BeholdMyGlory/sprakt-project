@@ -3,6 +3,8 @@ import re
 import sys
 import traceback
 
+import pydoc
+
 import common
 import kanamatcher
 
@@ -18,8 +20,8 @@ def main(*argv):
 
     lines = 0
     errors = 0
-    num_kanji = 0
-    no_ruby = 0
+    total_score = 0
+    bad_lines = []
 
     try:
         with open(kanji_file, encoding="utf-8-sig") as kjf, \
@@ -35,44 +37,26 @@ def main(*argv):
                 print("{}.".format(lines))
 
                 kanji, kana = strip_whitespace.sub("", kanji), strip_whitespace.sub("", kana)
-
-                kanji_al, kana_al = next(kanamatcher.align(kanji, kana, fill="　", d=-1))
-
-                print(kanji_al)
-                print(kana_al)
-
+                print(kanji)
+                print(kana)
 
                 try:
-                    result = kanamatcher.match_kana(kanji, kana)
+                    result, score = kanamatcher.match_kana(kanji, kana, return_score=True)
                 except Exception as e:
                     errors += 1
                     traceback.print_exc()
                     print()
                     continue
 
-                ruby = ""
-                output = ""
 
-                for kj, kn in result:
-                    if any(common.is_kanji(k) for k in kj):
-                        num_kanji += 1
-                        if kn is None:
-                            no_ruby += 1
+                total_score += score
 
-                    if kn is not None:
-                        ruby += kn
-                    output += kj
-
-                    while len(ruby) < len(output):
-                        ruby += "　"
-                    while len(output) < len(ruby):
-                        output += "　"
-
-                    ruby += "|"
-                    output += "|"
-
-                print(ruby)
+                output = "\n".join(kanamatcher.pretty_print(result))
                 print(output)
+                print("Score:", score)
+
+                if score > 0:
+                    bad_lines.append((score, lines, kanji, kana, output))
 
                 if print_all or skip_lines > 0:
                     if skip_lines > 0:
@@ -88,10 +72,20 @@ def main(*argv):
     except KeyboardInterrupt:
         pass
 
+    bad_lines.sort(reverse=True)
     print("================")
     print("Errors during parsing: {}/{}".format(errors, lines))
-    print("Kanji missing ruby: {}/{}".format(no_ruby, num_kanji))
+    print("Total score: {}".format(total_score))
+    print("Average score: {}".format(total_score / lines))
 
+    print("================")
+    input("Press enter to view bad lines: ")
+
+    pager_output = ""
+    for score, line, kanji, kana, output in bad_lines:
+        pager_output += "{}.\n{}\n{}\n{}\nScore: {}\n\n".format(
+            line, kanji, kana, output, score)
+    pydoc.pager(pager_output)
 
 if __name__ == '__main__':
     main(*sys.argv[1:])
