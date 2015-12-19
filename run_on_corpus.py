@@ -1,4 +1,5 @@
 
+import argparse
 import re
 import sys
 import traceback
@@ -9,14 +10,29 @@ import common
 import kanamatcher
 
 def main(*argv):
-    print_all = False
-    if argv[0] == "all":
-        print_all = True
-        argv = argv[1:]
+    parser = argparse.ArgumentParser(description="Test aligner on corpus.")
+    parser.add_argument('kanji_corpus', help="Corpus including kanji")
+    parser.add_argument('kana_corpus', help="Corpus only including kana")
+    parser.add_argument('--all', action="store_true", default=False, help="Run on whole corpus at once")
+    parser.add_argument('--skip', type=int, default=0, help="Number of lines at the start of the corpus to skip")
+    parser.add_argument('--missing-ruby-penalty', type=int,
+                        default=kanamatcher.NO_RUBY_PENALTY, help="Penalty for a kanji missing ruby")
+    parser.add_argument('--kana-mismatch-penalty', type=int, default=kanamatcher.KANA_MISMATCH_PENALTY,
+                        help="Penalty for a mismatch between the given kana and the generated ruby")
+    parser.add_argument('--alignments-to-test', type=int,
+                        default=kanamatcher.MAX_NUM_ALIGNMENTS, help="Max number of alignments to test")
+    args = parser.parse_args()
+
+    kanamatcher.NO_RUBY_PENALTY = args.missing_ruby_penalty
+    kanamatcher.KANA_MISMATCH_PENALTY = args.kana_mismatch_penalty
+    kanamatcher.MAX_NUM_ALIGNMENTS = args.alignments_to_test
+
+    print_all = args.all
 
     strip_whitespace = re.compile(r"\s")
 
-    kanji_file, kana_file = argv
+    kanji_file = args.kanji_corpus
+    kana_file = args.kana_corpus
 
     lines = 0
     errors = 0
@@ -33,6 +49,10 @@ def main(*argv):
                     continue
 
                 lines += 1
+
+                if args.skip > 0:
+                    args.skip -= 1
+                    continue
 
                 print("{}.".format(lines))
 

@@ -12,6 +12,8 @@ from reading_splitter import get_readings, process_reading, split_reading
 NO_RUBY_PENALTY = 2
 # mismatch between given kana and resulting ruby
 KANA_MISMATCH_PENALTY = 2
+# max number of alignments to test
+MAX_NUM_ALIGNMENTS = 1000
 
 def find_matches(a, b):
     def split(v, el):
@@ -27,7 +29,9 @@ def find_matches(a, b):
 
     return functools.reduce(split, zip(a, b), [])
 
-def filter_alignments(alignments, fill="-", limit=10000):
+def filter_alignments(alignments, fill="-", limit=None):
+    limit = limit or MAX_NUM_ALIGNMENTS
+
     matches = set()
     for a, b in itertools.islice(alignments, limit):
         match = clear_fill(find_matches(a, b), fill=fill)
