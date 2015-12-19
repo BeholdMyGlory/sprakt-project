@@ -11,7 +11,7 @@ def print_matrix(H):
         print(row)
 
 def is_kanji(k):
-    return 0x3400 <= ord(k) <= 0x9faf
+    return 0x3400 <= ord(k) <= 0x9faf or k == '々'
 
 def to_katakana(kana):
     return "".join(chr(ord(c) + (ord('ァ') - ord('ぁ')))

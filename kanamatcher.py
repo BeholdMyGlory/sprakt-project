@@ -6,6 +6,8 @@ import common
 from needleman_wunsch import needleman_wunsch as align
 from reading_splitter import get_readings, process_reading, split_reading
 
+NO_RUBY_PENALTY = 2
+
 def find_matches(a, b):
     def split(v, el):
         a, b = el
@@ -20,7 +22,7 @@ def find_matches(a, b):
 
     return functools.reduce(split, zip(a, b), [])
 
-def filter_alignments(alignments, fill="-", limit=1000):
+def filter_alignments(alignments, fill="-", limit=10000):
     matches = set()
     for a, b in itertools.islice(alignments, limit):
         match = clear_fill(find_matches(a, b), fill=fill)
@@ -36,32 +38,42 @@ def clear_fill(l, fill='-'):
     return [(a.replace(fill, ''), b.replace(fill, '')) for a, b in l]
 
 def finalize_furigana(l, return_score=False):
-    total_score = 0
-
     def process_furigana(kanji, kana):
-        nonlocal total_score
         if (common.to_hiragana(kanji) != kana
                 and len(kanji) != 0
-                and all(common.is_kanji(k) or k == '々' for k in kanji)):
-            furigana, score = split_reading(kanji, kana, return_score=True)
-            total_score += score
-            return furigana
+                and all(common.is_kanji(k) for k in kanji)):
+            return split_reading(kanji, kana, return_score=True)
         else:
-            return [(kanji, None)]
+            return [(kanji, None)], sum(NO_RUBY_PENALTY for k in kanji
+                                        if common.is_kanji(k))
 
-    furigana = [(a, b)
-                for kanji, kana in l
-                for a, b in process_furigana(kanji, kana)]
-    return furigana, total_score if return_score else furigana
+    nested_furigana, scores = zip(*(process_furigana(kanji, kana)
+                                    for kanji, kana in l))
+    furigana = [pair
+                for nested in nested_furigana
+                for pair in nested]
+    total_score = sum(scores)
+    return (furigana, total_score) if return_score else furigana
 
-def match_kana(kanji, kana):
-    return min((finalize_furigana(alignment, return_score=True)
-                for alignment in filter_alignments(align(kanji, kana))),
-               key=lambda x: x[1])[0]
+def match_kana(kanji, kana, return_score=False):
+    def stoponzero(alignments):
+        for i, alignment in enumerate(alignments):
+            furigana, score = finalize_furigana(alignment, return_score=True)
+            yield furigana, score
+
+            if score == 0:
+                print("Stopped after", i)
+                break
+
+    best_match, score = min(stoponzero(filter_alignments(align(kanji, kana))),
+                            key=lambda x: x[1])
+    return (best_match, score) if return_score else best_match
+
+
 
 if __name__ == "__main__":
-    kanji = "出来ない場合も多いと思います"
-    kana = "できないばあいもおおいとおもいます"
+    kanji = "強い相手を求めて空を飛び回る。なんでも溶かしてしまう高熱の炎を自分より弱いものに向けることはしない。"
+    kana = "つよいあいてをもとめてそらをとびまわる。なんでもとかしてしまうこうねつのほのおをじぶんよりよわいものにむけることはしない。"
     kanji, kana = next(align(kanji, kana))
     print(kanji)
     print(kana)
@@ -71,4 +83,4 @@ if __name__ == "__main__":
     print(match)
     print(finalize_furigana(match))
 
-    print(match_kana("出来ない場合も多いと思います", "できないばあいもおおいとおもいます"))
+    #print(match_kana("出来ない場合も多いと思います", "できないばあいもおおいとおもいます"))
