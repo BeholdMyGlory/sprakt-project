@@ -10,7 +10,8 @@ import common
 import kanamatcher
 
 def main(*argv):
-    parser = argparse.ArgumentParser(description="Test aligner on corpus.")
+    parser = argparse.ArgumentParser(description="Test aligner on corpus.",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('kanji_corpus', help="Corpus including kanji")
     parser.add_argument('kana_corpus', help="Corpus only including kana")
     parser.add_argument('--all', action="store_true", default=False, help="Run on whole corpus at once")
