@@ -50,21 +50,21 @@ def finalize_furigana(l, return_score=False):
     def process_furigana(kanji, kana):
         if (common.to_hiragana(kanji) != kana
                 and len(kanji) != 0
-                and all(common.is_kanji(k) for k in kanji)):
+                and all(common.is_kanji(k) or ord('０') <= ord(k) <= ord('９') for k in kanji)):
             return split_reading(kanji, kana, return_score=True)
         else:
             return [(kanji, None)], sum(NO_RUBY_PENALTY for k in kanji
                                         if common.is_kanji(k))
 
-    nested_furigana, scores = zip(*(process_furigana(kanji, kana)
+    nested_furigana, scores = zip(*(process_furigana(kanji, common.to_hiragana(kana))
                                     for kanji, kana in l))
     furigana = [pair
                 for nested in nested_furigana
                 for pair in nested]
     total_score = sum(scores) + KANA_MISMATCH_PENALTY * \
-        Levenshtein.distance("".join(kana for _, kana in l),
-                             "".join(kana if kana is not None else kanji
-                                     for kanji, kana in furigana))
+        Levenshtein.distance(common.to_hiragana("".join(kana for _, kana in l)),
+                             common.to_hiragana("".join(kana if kana is not None else kanji
+                                     for kanji, kana in furigana)))
 
     return (furigana, total_score) if return_score else furigana
 
